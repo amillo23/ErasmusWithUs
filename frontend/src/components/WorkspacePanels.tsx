@@ -37,14 +37,40 @@ export function AssistantPanel() {
 
 export function ComparePanel({ opportunities, onBrowse }: { opportunities: ErasmusOpportunity[]; onBrowse: () => void }) {
   const { t, language } = usePreferences()
-  const compared = opportunities.slice(0, 3)
+  const [selectedIds, setSelectedIds] = useState<number[]>(() => opportunities.slice(0, 3).map((item) => item.id))
+  useEffect(() => {
+    setSelectedIds((current) => {
+      const available = new Set(opportunities.map((item) => item.id))
+      const retained = current.filter((id) => available.has(id)).slice(0, 3)
+      return retained.length > 0 ? retained : opportunities.slice(0, 3).map((item) => item.id)
+    })
+  }, [opportunities])
+  const compared = selectedIds.map((id) => opportunities.find((item) => item.id === id)).filter((item): item is ErasmusOpportunity => Boolean(item))
   const bestValue = compared.length ? [...compared].sort((a, b) => (a.studentBudgetEstimate - a.monthlyGrant) - (b.studentBudgetEstimate - b.monthlyGrant))[0] : null
   const bestGrant = compared.length ? [...compared].sort((a, b) => b.monthlyGrant - a.monthlyGrant)[0] : null
   const soonestDeadline = compared.length ? [...compared].sort((a, b) => a.deadline.localeCompare(b.deadline))[0] : null
   const formatDate = (value: string) => new Date(value).toLocaleDateString(getLanguageLocale(language), { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' })
+  function toggleSelection(id: number) {
+    setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length < 3 ? [...current, id] : current)
+  }
+  function exportCsv() {
+    const escape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`
+    const rows = [
+      ['University', 'City', 'Country', 'Minimum GPA', 'Monthly grant EUR', 'Monthly cost EUR', 'Gap after grant EUR', 'Deadline', 'Verification'],
+      ...compared.map((item) => [item.university, item.city, item.country, item.minimumGpa, item.monthlyGrant, item.studentBudgetEstimate, Math.max(0, item.studentBudgetEstimate - item.monthlyGrant), item.deadline, item.verificationStatus]),
+    ]
+    const blob = new Blob([rows.map((row) => row.map(escape).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'erasmuswithus-comparison.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   return <section className="workspace-panel">
-    <div className="compare-heading"><div><span className="section-kicker">{t('COMPARE DESTINATIONS')}</span><h2>{t('Compare your saved choices.')}</h2><p>{t('See the decision-making details at a glance, from monthly affordability to application timing.')}</p></div><span className="compare-count">{compared.length}/3 {t('destinations')}</span></div>
+    <div className="compare-heading"><div><span className="section-kicker">{t('COMPARE DESTINATIONS')}</span><h2>{t('Compare your saved choices.')}</h2><p>{t('See the decision-making details at a glance, from monthly affordability to application timing.')}</p></div><div className="compare-heading-actions"><span className="compare-count">{compared.length}/3 {t('destinations')}</span>{compared.length > 1 && <button className="secondary-button" type="button" onClick={exportCsv}>↓ {t('Export CSV')}</button>}</div></div>
+    {opportunities.length > 0 && <div className="compare-picker"><div><strong>{t('Choose destinations')}</strong><small>{t('Select up to three saved universities for this comparison.')}</small></div><div className="compare-picker-options">{opportunities.map((item) => <button type="button" key={item.id} className={selectedIds.includes(item.id) ? 'compare-picker-option selected' : 'compare-picker-option'} onClick={() => toggleSelection(item.id)} aria-pressed={selectedIds.includes(item.id)}><span>{selectedIds.includes(item.id) ? '✓' : '+'}</span>{item.university}</button>)}</div></div>}
     {compared.length < 2 ? <>
       <p>{t('Save at least two destinations to compare GPA requirements, grants, monthly costs, and deadlines side by side.')}</p>
       <button className="primary-button" onClick={onBrowse}>{t('Discover destinations')} <ArrowUpRight size={15} /></button>

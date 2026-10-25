@@ -1656,6 +1656,70 @@ h1 em {
   gap: 18px;
 }
 
+.compare-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compare-picker {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 16px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(255,255,255,.58);
+}
+
+.compare-picker > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.compare-picker strong { font-size: 12px; }
+.compare-picker small { color: var(--muted); font-size: 10px; }
+
+.compare-picker-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.compare-picker-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.compare-picker-option span {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf0eb;
+  color: var(--muted);
+}
+
+.compare-picker-option.selected {
+  border-color: var(--teal);
+  background: #e3eee7;
+  color: var(--teal-strong);
+}
+
+.compare-picker-option.selected span {
+  background: var(--green);
+  color: #fff;
+}
+
 .compare-heading p {
   max-width: 620px;
   color: var(--muted);
@@ -5386,8 +5450,10 @@ html[data-theme='dark'] .student-label { background: rgba(99,193,179,.14); color
 .community-notice button { border: 0; background: transparent; color: inherit; }
 html[data-theme='dark'] .budget-editor, html[data-theme='dark'] .budget-comparison, html[data-theme='dark'] .story-feed, html[data-theme='dark'] .story-form, html[data-theme='dark'] .reminder-item { background: #1b2928; }
 html[data-theme='dark'] .compare-insight, html[data-theme='dark'] .budget-kpis > div { background: #1b2928; }
+html[data-theme='dark'] .compare-picker { background: #1b2928; }
 html[data-theme='dark'] .budget-breakdown { background: #172624; }
 html[data-theme='dark'] .budget-editor select, html[data-theme='dark'] .budget-input-grid input, html[data-theme='dark'] .currency-input, html[data-theme='dark'] .stories-heading select, html[data-theme='dark'] .story-form input, html[data-theme='dark'] .story-form select, html[data-theme='dark'] .story-form textarea, html[data-theme='dark'] .story-card, html[data-theme='dark'] .chat-report-form textarea, html[data-theme='dark'] .chat-safety-actions button { border-color: rgba(188, 218, 205, .17); background: #142120; color: #e6efeb;   .compare-heading { flex-direction: column; gap: 8px; }
+.compare-heading-actions { width: 100%; justify-content: space-between; }
   .compare-insights, .budget-kpis { grid-template-columns: repeat(2, 1fr); }
   .compare-table-wrap { overflow-x: auto; }
   .compare-table { min-width: 680px; }
