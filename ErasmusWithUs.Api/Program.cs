@@ -1,9 +1,9 @@
 using ErasmusWithUs.Api.Data;
 using ErasmusWithUs.Api.Models;
 using ErasmusWithUs.Api.Services;
+using System.Data.Common;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -26,16 +26,24 @@ if (builder.Environment.IsProduction() &&
 jwtKey ??= "ErasmusWithUs-development-key-change-before-production-2026";
 
 builder.Services.AddOpenApi();
+var databaseConnectionString = builder.Configuration["Database:ConnectionString"] ??
+    builder.Configuration["DATABASE_URL"];
 var configuredDatabasePath = builder.Configuration["Database:Path"];
 var databasePath = string.IsNullOrWhiteSpace(configuredDatabasePath)
     ? builder.Environment.IsProduction() ? "/var/data/erasmuswithus.db" : "erasmuswithus.db"
     : configuredDatabasePath;
-if (builder.Environment.IsProduction() && !Path.IsPathRooted(databasePath))
+if (string.IsNullOrWhiteSpace(databaseConnectionString) &&
+    builder.Environment.IsProduction() && !Path.IsPathRooted(databasePath))
 {
-    throw new InvalidOperationException("Database:Path must be an absolute path in production so the database can use persistent storage.");
+    throw new InvalidOperationException("Configure Database:ConnectionString for production PostgreSQL or use an absolute Database:Path with persistent storage.");
 }
 builder.Services.AddDbContext<ErasmusDbContext>(options =>
-    options.UseSqlite($"Data Source={databasePath}"));
+{
+    if (!string.IsNullOrWhiteSpace(databaseConnectionString))
+        options.UseNpgsql(databaseConnectionString);
+    else
+        options.UseSqlite($"Data Source={databasePath}");
+});
 builder.Services.AddSingleton<IPasswordHasher<UserEntity>, PasswordHasher<UserEntity>>();
 builder.Services.AddHostedService<DeadlineReminderWorker>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -113,7 +121,11 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
-app.Logger.LogInformation("SQLite database path: {DatabasePath}", Path.GetFullPath(databasePath));
+app.Logger.LogInformation(
+    string.IsNullOrWhiteSpace(databaseConnectionString)
+        ? "SQLite database path: {DatabasePath}"
+        : "Using PostgreSQL database",
+    string.IsNullOrWhiteSpace(databaseConnectionString) ? Path.GetFullPath(databasePath) : string.Empty);
 
 using (var scope = app.Services.CreateScope())
 {
@@ -1797,7 +1809,9 @@ static void TryAddAuthColumn(ErasmusDbContext database, string sql)
     {
         database.Database.ExecuteSqlRaw(sql);
     }
-    catch (SqliteException exception) when (exception.SqliteErrorCode == 1 && exception.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+    catch (DbException exception) when (
+        exception.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase) ||
+        exception.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
     {
         // The column already exists in a database upgraded by an earlier startup.
     }
