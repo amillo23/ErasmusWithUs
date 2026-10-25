@@ -131,10 +131,13 @@ using (var scope = app.Services.CreateScope())
 {
     var database = scope.ServiceProvider.GetRequiredService<ErasmusDbContext>();
     database.Database.EnsureCreated();
-    EnsureAuthColumns(database);
-    EnsureCommunityTables(database);
-    EnsureFeatureTables(database);
-    EnsurePushTables(database);
+    if (database.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true)
+    {
+        EnsureAuthColumns(database);
+        EnsureCommunityTables(database);
+        EnsureFeatureTables(database);
+        EnsurePushTables(database);
+    }
 
     var existingOpportunityIds = database.Opportunities.Select(item => item.Id).ToHashSet();
     var missingOpportunities = SeedData.AllOpportunities
