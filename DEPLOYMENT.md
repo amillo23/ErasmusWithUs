@@ -2,8 +2,8 @@
 
 ErasmusWithUs deploys as two Render services:
 
-- `erasmuswithus-api`: ASP.NET Core API built from `ErasmusWithUs.Api/Dockerfile`
-- `erasmuswithus-frontend`: Vite static site built from `frontend`
+- `erasmuswithus`: ASP.NET Core API built from `ErasmusWithUs.Api/Dockerfile`
+- `erasmuswithus-web`: Vite static site built from `frontend`
 
 ## Steps
 
@@ -14,14 +14,14 @@ ErasmusWithUs deploys as two Render services:
    - `Jwt__Key`: a random secret of at least 32 bytes
    - `Email__SmtpHost`, `Email__Username`, `Email__Password`, `Email__From`
    - Outgoing account emails use the display name `Erasmus With Us`; `Email__FromName` can override it.
-5. Set `Cors__AllowedOrigins` on the API service to the exact frontend origin if it differs from `https://erasmuswithus-frontend.onrender.com`.
-6. Update `VITE_API_BASE_URL` on the frontend service if the generated API URL differs from `https://erasmuswithus-api.onrender.com`.
+5. Set `Cors__AllowedOrigins` on the API service to the exact frontend origin: `https://erasmuswithus-web.onrender.com`.
+6. Set `VITE_API_BASE_URL` on the frontend service to `https://erasmuswithus.onrender.com`.
 7. Redeploy both services after changing their environment settings.
 8. Check the API at `/api/health`, then open the frontend URL.
 
 ## Important for production
 
-The Render Blueprint provisions a 1 GB persistent disk at `/var/data` and stores SQLite at `/var/data/erasmuswithus.db`. Persistent disks require a paid web service plan and prevent horizontal scaling; see Render's current pricing before deploying. For multi-instance production, move the API to PostgreSQL. The SMTP values must be configured for account verification and password reset emails; development mode can use the returned code when SMTP is not configured.
+The current free-plan configuration stores SQLite at `/tmp/erasmuswithus.db`. This storage is ephemeral and can be cleared on restart or redeploy, so account and catalogue changes are not durable. For real production use, attach a paid persistent disk or move the API to PostgreSQL. The SMTP values must be configured for account verification and password reset emails; development mode can use the returned code when SMTP is not configured.
 
 Authentication routes are rate limited by client IP: 12 register/login attempts per minute, 4 account email/reset requests per 15 minutes, and 10 email-code attempts per 15 minutes. Community messages are limited to 30 per minute. The counters live in API memory, so a multi-instance deployment needs a shared rate-limit store as well as PostgreSQL.
 

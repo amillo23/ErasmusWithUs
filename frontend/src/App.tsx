@@ -127,6 +127,7 @@ function App() {
   const [saved, setSaved] = useState<number[]>(readSavedIds)
   const [activeNav, setActiveNav] = useState('Discover')
   const [isLoading, setIsLoading] = useState(true)
+  const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [error, setError] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [matches, setMatches] = useState<MatchResult[]>([])
@@ -178,11 +179,20 @@ function App() {
   useEffect(() => {
     let cancelled = false
     getOpportunities({})
-      .then((data) => { if (!cancelled) setOpportunities(data) })
-      .catch(() => { if (!cancelled) setError('The API is offline. Start ErasmusWithUs.Api on port 5238 and try again.') })
+      .then((data) => {
+        if (cancelled) return
+        setOpportunities(data)
+        const available = new Set(data.map((item) => item.id))
+        setSaved((current) => {
+          const next = current.filter((id) => available.has(id))
+          if (next.length !== current.length) localStorage.setItem(savedKey, JSON.stringify(next))
+          return next
+        })
+      })
+      .catch(() => { if (!cancelled) setError('Could not load destinations. Check your connection and try again.') })
       .finally(() => { if (!cancelled) setIsLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [catalogAttempt])
 
   useEffect(() => {
     if (!currentUser?.emailVerified) {
@@ -898,7 +908,7 @@ function App() {
           </div>
 
           {showFilters && <div className="filter-panel"><label>{t('Country')}<select value={country} onChange={(event) => setCountry(event.target.value)}><option value="">{t('All countries')}</option>{countries.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label><label>{t('Study field')}<select value={studyFieldFilter} onChange={(event) => setStudyFieldFilter(event.target.value)}><option value="">{t('All study fields')}</option>{studyFieldOptions.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label><label>{t('Degree level')}<select value={level} onChange={(event) => setLevel(event.target.value)}><option value="">{t('All levels')}</option><option value="Bachelor">{t('Bachelor')}</option><option value="Master">{t('Master')}</option></select></label><label>{t('Teaching language')}<select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)}><option value="">{t('All languages')}</option>{languageOptions.map((item) => <option key={item} value={item}>{t(item)}</option>)}</select></label><button onClick={() => { setCountry(''); setLevel(''); setStudyFieldFilter(''); setLanguageFilter('') }}>{t('Clear filters')} <X size={14} /></button></div>}
-          {error && <div className="error-banner"><span>{t(error)}</span><button onClick={() => setError('')} aria-label={t('Dismiss error')}><X size={16} /></button></div>}
+          {error && <div className="error-banner"><span>{t(error)}</span><button className="text-button" type="button" onClick={() => { setError(''); setIsLoading(true); setCatalogAttempt((attempt) => attempt + 1) }}>{t('Retry')}</button><button type="button" onClick={() => setError('')} aria-label={t('Dismiss error')}><X size={16} /></button></div>}
           <div className="results-meta"><span>{isLoading ? t('Loading destinations...') : `${visibleOpportunities.length} ${t('opportunities')}`}</span><span className="results-meta-right"><span className="status-dot" /> {t('Source and review status shown per listing')}</span></div>
           <div className="opportunity-grid">{isLoading ? [...Array(4)].map((_, index) => <div className="opportunity-card skeleton" key={index} />) : visibleOpportunities.map((opportunity) => <OpportunityCard key={opportunity.id} opportunity={opportunity} saved={saved.includes(opportunity.id)} onSave={toggleSaved} reminder={reminders.find((item) => item.opportunityId === opportunity.id)} onToggleReminder={toggleDeadlineReminder} canSetReminder={Boolean(currentUser?.emailVerified)} />)}</div>
           {!isLoading && visibleOpportunities.length === 0 && <div className="empty-state"><Compass size={28} /><strong>{t(activeNav === 'Shortlist' ? 'Your shortlist is empty' : 'No destinations found')}</strong><span>{t(activeNav === 'Shortlist' ? 'Use the bookmark icon to save a destination.' : 'Try clearing a filter or searching for another city.')}</span></div>}

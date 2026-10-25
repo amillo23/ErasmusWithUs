@@ -4,20 +4,36 @@ import type {
   StudentPlan, StudentProfile, User,
 } from '../types/erasmus'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5238'
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5238').replace(/\/+$/, '')
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-  })
+  const controller = new AbortController()
+  const timeout = window.setTimeout(() => controller.abort(), 15_000)
+  const abortFromCaller = () => controller.abort()
+  options?.signal?.addEventListener('abort', abortFromCaller, { once: true })
 
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null) as { message?: string } | null
-    throw new Error(payload?.message ?? `API request failed with status ${response.status}`)
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+    })
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as { message?: string } | null
+      throw new Error(payload?.message ?? `API request failed with status ${response.status}`)
+    }
+    if (response.status === 204) return undefined as T
+    return response.json() as Promise<T>
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('The request took too long. Please check your connection and try again.')
+    }
+    throw error
+  } finally {
+    window.clearTimeout(timeout)
+    options?.signal?.removeEventListener('abort', abortFromCaller)
   }
-  if (response.status === 204) return undefined as T
-  return response.json() as Promise<T>
 }
 
 export function getOpportunities(params: { search?: string; country?: string; level?: string }) {

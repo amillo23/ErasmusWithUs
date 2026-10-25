@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: erasmuswithus-api
+    name: erasmuswithus
     runtime: docker
     plan: 0.5c-512mb
     dockerfilePath: ./ErasmusWithUs.Api/Dockerfile
@@ -26,7 +26,7 @@ services:
       - key: Email__FromName
         value: Erasmus With Us
       - key: Cors__AllowedOrigins
-        value: https://erasmuswithus-frontend.onrender.com
+        value: https://erasmuswithus-web.onrender.com
       - key: Database__Path
         value: /tmp/erasmuswithus.db
       - key: CatalogReview__Key
@@ -39,14 +39,14 @@ services:
         value: gpt-4o-mini
 
   - type: web
-    name: erasmuswithus-frontend
+    name: erasmuswithus-web
     runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://erasmuswithus-api.onrender.com
+        value: https://erasmuswithus.onrender.com
     routes:
       - type: rewrite
         source: /*
