@@ -1072,7 +1072,8 @@ h1 em {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   padding: clamp(58px, 8vw, 110px) 28px 90px;
   background:
     radial-gradient(circle at top left, rgba(245, 111, 82, 0.25), transparent 27%),
@@ -1183,6 +1184,7 @@ h1 em {
 }
 
 .front-panel__product-preview {
+  min-height: min(72vh, 680px);
   display: grid;
   grid-template-columns: minmax(240px, 0.75fr) minmax(0, 1.25fr);
   gap: 26px;
@@ -1483,6 +1485,8 @@ h1 em {
 
 .front-panel__stories,
 .front-panel__campuses {
+  min-height: min(62vh, 580px);
+  align-content: center;
   display: grid;
   gap: 18px;
   padding-top: 26px;
@@ -1637,6 +1641,7 @@ h1 em {
 }
 
 .front-panel__bottom-cta {
+  min-height: 34vh;
   display: flex;
   align-items: center;
   justify-content: space-between;
