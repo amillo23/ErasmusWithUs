@@ -667,6 +667,34 @@ function App() {
               ))}
             </div>
           </div>
+          <section className="front-panel__product-preview" aria-label="Erasmus With Us features">
+            <div className="front-panel__preview-copy">
+              <span className="section-kicker">ONE PLACE FOR THE WHOLE JOURNEY</span>
+              <h2>From first search to final application.</h2>
+              <p>Turn an overwhelming exchange decision into a clear, practical plan with tools that stay connected.</p>
+              <button className="text-button front-panel__preview-link" type="button" onClick={() => setAuthMode('register')}>Explore the workspace <ArrowUpRight size={14} /></button>
+            </div>
+            <div className="front-panel__preview-board">
+              <article className="preview-card preview-card-match">
+                <div className="preview-card-top"><span className="preview-icon">✦</span><small>PERSONALISED MATCH</small></div>
+                <strong>Helsinki</strong>
+                <span>94% fit for your profile</span>
+                <div className="preview-progress"><i style={{ width: '94%' }} /></div>
+              </article>
+              <article className="preview-card preview-card-budget">
+                <div className="preview-card-top"><span className="preview-icon">€</span><small>MONTHLY PLAN</small></div>
+                <strong>€680 <em>after grant</em></strong>
+                <span>Budget gap calculated before you apply</span>
+                <div className="preview-bars"><i /><i /><i /><i /><i /></div>
+              </article>
+              <article className="preview-card preview-card-deadline">
+                <div className="preview-card-top"><span className="preview-icon">✓</span><small>APPLICATION TRACKER</small></div>
+                <strong>3 of 6 steps</strong>
+                <span>Keep every document and deadline visible</span>
+                <div className="preview-checks"><i /><i /><i /><i /><i /><i /></div>
+              </article>
+            </div>
+          </section>
           <section className="front-panel__stories">
             <div className="front-panel__section-heading">
               <div><span>{t('STUDENT EXPERIENCES')}</span><h2>{t('What exchange students wish they knew earlier.')}</h2></div>
