@@ -620,6 +620,25 @@ function App() {
     setPointer({ x, y })
   }
 
+  useEffect(() => {
+    if (!showLanding || currentUser) return
+    const revealItems = Array.from(document.querySelectorAll<HTMLElement>('.front-panel .landing-reveal'))
+    if (!('IntersectionObserver' in window)) {
+      revealItems.forEach((item) => item.classList.add('is-visible'))
+      return
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' })
+    revealItems.forEach((item) => observer.observe(item))
+    return () => observer.disconnect()
+  }, [currentUser, showLanding])
+
   if (showLanding && !currentUser) {
     return (
       <div className="front-panel" onMouseMove={handleLandingMove}>
@@ -627,8 +646,8 @@ function App() {
         <div className="front-panel__orb orb-one" style={{ transform: `translate(${pointer.x * 1.2}px, ${pointer.y * 1.2}px)` }} />
         <div className="front-panel__orb orb-two" style={{ transform: `translate(${pointer.x * -0.8}px, ${pointer.y * -0.8}px)` }} />
         <div className="front-panel__content">
-          <div className="front-panel__badge">ERASMUS WITH US</div>
-          <div className="front-panel__header">
+          <div className="front-panel__badge landing-reveal is-visible">ERASMUS WITH US</div>
+          <div className="front-panel__header landing-reveal is-visible">
             <div>
               <span className="section-kicker">Smart exchange planning</span>
               <h1>Find your next study chapter with confidence.</h1>
@@ -640,14 +659,15 @@ function App() {
             </div>
           </div>
 
-          <p className="front-panel__text">Discover Erasmus opportunities, compare eligible universities, build your personal shortlist, and prepare your exchange journey with practical guidance from day one.</p>
+          <p className="front-panel__text landing-reveal is-visible">Discover Erasmus opportunities, compare eligible universities, build your personal shortlist, and prepare your exchange journey with practical guidance from day one.</p>
 
-          <div className="front-panel__actions">
+          <div className="front-panel__actions landing-reveal is-visible">
             <button className="primary-button" type="button" onClick={() => setAuthMode('login')}>Log in</button>
             <button className="secondary-button" type="button" onClick={() => setAuthMode('register')}>Create account</button>
           </div>
+          <div className="front-panel__scroll-cue" aria-hidden="true"><span />Scroll to explore</div>
 
-          <div className="front-panel__slider" aria-live="polite">
+          <div className="front-panel__slider landing-reveal" aria-live="polite">
             {slides.map((slide, index) => (
               <article key={slide.title} className={`front-panel__slide ${landingSlide === index ? 'active' : ''}`}>
                 <span>{slide.accent}</span>
@@ -667,7 +687,7 @@ function App() {
               ))}
             </div>
           </div>
-          <section className="front-panel__product-preview" aria-label="Erasmus With Us features">
+          <section className="front-panel__product-preview landing-reveal" aria-label="Erasmus With Us features">
             <div className="front-panel__preview-copy">
               <span className="section-kicker">ONE PLACE FOR THE WHOLE JOURNEY</span>
               <h2>From first search to final application.</h2>
@@ -695,7 +715,7 @@ function App() {
               </article>
             </div>
           </section>
-          <section className="front-panel__stories">
+          <section className="front-panel__stories landing-reveal">
             <div className="front-panel__section-heading">
               <div><span>{t('STUDENT EXPERIENCES')}</span><h2>{t('What exchange students wish they knew earlier.')}</h2></div>
               <p>{t('Practical reminders for planning your exchange. Read student-submitted stories after signing in.')}</p>
@@ -707,7 +727,7 @@ function App() {
               <article><strong>{t('Paperwork')}</strong><p>{t('Keep nomination, learning agreement, insurance and visa dates on one checklist.')}</p></article>
             </div>
           </section>
-          <section className="front-panel__campuses">
+          <section className="front-panel__campuses landing-reveal">
             <div className="front-panel__section-heading">
               <div><span>{t('QS WORLD UNIVERSITY RANKINGS 2027')}</span><h2>{t('A first look at popular campuses.')}</h2></div>
               <p>{t('Rankings are one comparison point, not a measure of Erasmus eligibility.')}</p>
@@ -727,7 +747,7 @@ function App() {
               ))}
             </div>
           </section>
-          <div className="front-panel__bottom-cta">
+          <div className="front-panel__bottom-cta landing-reveal">
             <div><strong>{t('Ready to plan your exchange?')}</strong><span>{t('Sign in to save destinations, see student stories and build your profile.')}</span></div>
             <button className="primary-button" type="button" onClick={() => setAuthMode('login')}>{t('Log in to continue')} <ArrowUpRight size={15} /></button>
           </div>
